@@ -56,23 +56,6 @@ func main() {
 			}
 		}
 
-		// //seperate . from i+1
-		// if strings.Contains(arr[i], ",") {
-		// 	splitword := strings.Split(arr[i], "")
-		// 	splitword = splitword[1:]
-		// 	// fmt.Println(splitword)
-		// 	str := strings.Join(splitword, "")
-		// 	// fmt.Println(str)
-
-		// 	punc := puncTuations(arr[i])
-		// 	// fmt.Println("this is punc", punc)
-
-		// 	arr[i-2] = arr[i-2] + punc
-		// 	arr[i] = ""
-		// 	arr = append(arr, str)
-
-		// }
-
 		//up
 		if strings.Contains(arr[i], "(up") {
 			if strings.Contains(arr[i], "(up)") {
@@ -159,29 +142,17 @@ func main() {
 			arr[i] = "an"
 			//fmt.Println(arr)
 		}
-
-		if strings.Contains(arr[i], ",") {
-			if element == "," {
-				arr[i] = ""
-				arr[i-1] = arr[i-1] + ","
-			} else {
-				arr[i-1] = arr[i-1] + ","
-				arr[i] = arr[i][len("1"):]
-			}
-		}
 	}
 
-	//punctuations: . , ! ? : ; -
-
-	//Except groups of punctuation
-
-	//' awesome ' => 'awesome'
+	//the rest
+	arr = RemoveSpacesPuctuations(arr)
+	arr = Quotations(arr)
 
 	str := strings.Join(arr, " ")                 //turns array into string
 	res := strings.Join(strings.Fields(str), " ") //remove duplicate spaces
 
 	// fmt.Println(str)
-	fmt.Println(res)
+	//fmt.Println(res)
 
 	final := []byte(res) //string to byte
 
@@ -202,15 +173,80 @@ func firstLetter(s string) bool {
 	return false
 }
 
-func puncTuations(s string) string {
-	r := []rune(s)
-	return string(r[0])
-}
-
 func sliceAtoi(s string) int {
 	intvar, err := strconv.Atoi(s)
 	if err != nil {
 		fmt.Println(err)
 	}
 	return intvar
+}
+
+func Quotations(s []string) []string {
+	temp := 0
+	for i := 0; i < len(s); i++ {
+		if rune(s[i][len(s[i])-1]) == '\'' {
+			temp++
+			if temp%2 != 0 {
+				s[i+1] = "'" + s[i+1]
+				if len(s[i]) > 1 {
+					s[i] = s[i][:len(s[i])-1]
+				} else {
+					s[i] = ""
+				}
+			}
+		}
+	}
+	s = TruncateStrings(s)
+	return s
+}
+
+// remove white spaces between punctuations and the words right infront
+func RemoveSpacesPuctuations(s []string) []string {
+	for i := 0; i < len(s); i++ {
+		if len(s[i]) != 0 && (rune(s[i][0]) == '.' || rune(s[i][0]) == ',' || rune(s[i][0]) == '!' || rune(s[i][0]) == '?' || rune(s[i][0]) == ':' || rune(s[i][0]) == ';' || rune(s[i][0]) == '\'') {
+			punc := PuncStopAt(s[i])
+			if punc == len(s[i]) {
+				for e := i - 1; e >= 0; e-- {
+					if len(s[e]) != 0 {
+						s[e] += s[i]
+						s[i] = ""
+						break
+					}
+				}
+			} else {
+				for e := i - 1; e >= 0; e-- {
+					if len(s[e]) != 0 {
+						s[e] += s[i][:punc]
+						s[i] = s[i][punc:]
+						break
+					}
+				}
+			}
+		}
+	}
+	s = TruncateStrings(s)
+	return s
+}
+
+func PuncStopAt(s string) int {
+	r := []rune(s)
+	for i := 0; i < len(r); i++ {
+		if r[i] != '.' && r[i] != ',' && r[i] != '!' && r[i] != '?' && r[i] != ':' && r[i] != ';' && r[i] != '\'' {
+			return i
+		}
+	}
+	return len(r)
+}
+
+func TruncateStrings(s []string) []string {
+	for i := 0; i < len(s); i++ {
+		if len(s[i]) == 0 && i == len(s)-1 {
+			s = s[:i]
+		} else if len(s[i]) == 0 {
+			copy(s[i:], s[i+1:])
+			s = s[:len(s)-1]
+			i--
+		}
+	}
+	return s
 }
